@@ -1,0 +1,51 @@
+name: Release to AWS MLPoC ECR
+
+on: 
+  workflow_dispatch:
+    inputs:
+      source_docker_tag:
+        description: 'Source Image Tag'     
+        required: true
+        default: 'latest'
+      destination_docker_tag:
+        description: 'Destination Image Tag'  
+        required: true
+        default: 'latest'
+      account_id:
+        description: 'AWS Account ID'
+      region:
+        description: 'AWS Region'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment:
+      name: aws-ecr
+      url: https://aws.amazon.com/ecr/
+    permissions:
+      id-token: write
+    steps:
+      - name: 👨‍💻 Checkout repository
+        uses: actions/checkout@v4
+      - name: 'Login to GitHub Container Registry'
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{vars.DOCKER_CONTAINER_REGISTRY_TOKEN}}
+      - name: 🐳 Pull Image
+        run: |
+          docker pull ghcr.io/rio-tinto/open-webui:${{ github.event.inputs.source_docker_tag }}
+      - name: ☁️ Authenticate To AWS 
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ vars.MLPOC_BRUKER_GH_ROLE_ARN }}
+          role-session-name: DNA-Automation-Github-Actions-Session
+          aws-region: ${{ github.even.inputs.region }}
+      - name: ☁️ Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: 🐳 Tag and push docker image to Amazon ECR
+        run: |
+          docker tag ghcr.io/rio-tinto/open-webui:${{  github.event.inputs.source_docker_tag }} ${{ github.even.inputs.account_id }}.dkr.ecr.${{ github.even.inputs.region }}.amazonaws.com/open-webui:${{ github.event.inputs.destination_docker_tag }}
+          docker push ${{ github.even.inputs.account_id }}.dkr.ecr.${{ github.even.inputs.region }}.amazonaws.com/open-webui:${{ github.event.inputs.destination_docker_tag }}
