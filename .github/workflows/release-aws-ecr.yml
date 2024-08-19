@@ -47,5 +47,5 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
       - name: 🐳 Tag and push docker image to Amazon ECR
         run: |
-          docker tag ghcr.io/rio-tinto/open-webui:${{  github.event.inputs.source_docker_tag }} ${{ github.even.inputs.account_id }}.dkr.ecr.${{ github.even.inputs.region }}.amazonaws.com/open-webui:${{ github.event.inputs.destination_docker_tag }}
-          docker push ${{ github.even.inputs.account_id }}.dkr.ecr.${{ github.even.inputs.region }}.amazonaws.com/open-webui:${{ github.event.inputs.destination_docker_tag }}
+          docker tag ghcr.io/rio-tinto/open-webui:${{  github.event.inputs.source_docker_tag }} ${{ github.event.inputs.account_id }}.dkr.ecr.${{ github.event.inputs.region }}.amazonaws.com/open-webui:${{ github.event.inputs.destination_docker_tag }}
+          docker push ${{ github.event.inputs.account_id }}.dkr.ecr.${{ github.event.inputs.region }}.amazonaws.com/open-webui:${{ github.event.inputs.destination_docker_tag }}
