@@ -132,7 +132,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
         trusted_email = decode_token_from_alb(jwt)["email"]
         trusted_email = trusted_email.lower()
         trusted_name = trusted_email
-        
+
         if WEBUI_AUTH_TRUSTED_NAME_HEADER:
             trusted_name = request.headers.get(
                 WEBUI_AUTH_TRUSTED_NAME_HEADER, trusted_email
