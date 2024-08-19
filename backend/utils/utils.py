@@ -54,7 +54,7 @@ def decode_token(token: str) -> Optional[dict]:
     except Exception:
         return None
 
-    
+
 def decode_token_from_alb(token: str) -> Optional[dict]:
     try:
         payload = jwt.decode(token, options={"verify_signature": False})
