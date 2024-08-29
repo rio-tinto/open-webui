@@ -55,6 +55,17 @@ def decode_token(token: str) -> Optional[dict]:
         return None
 
 
+def decode_token_from_alb(token: str) -> Optional[dict]:
+    try:
+        payload = jwt.decode(token, options={"verify_signature": False})
+        logging.info(payload)
+        return payload
+    except Exception as e:
+        print(e)
+        logging.info(e)
+        return None
+
+
 def extract_token_from_auth_header(auth_header: str):
     return auth_header[len("Bearer ") :]
 
