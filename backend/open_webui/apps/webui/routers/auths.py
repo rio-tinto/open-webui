@@ -30,6 +30,7 @@ from open_webui.utils.utils import (
     get_current_user,
     get_password_hash,
     decode_token_from_alb,
+    decode_token_from_alb,
 )
 from open_webui.utils.webhook import post_webhook
 
