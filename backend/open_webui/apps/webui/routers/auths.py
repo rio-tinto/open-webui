@@ -29,6 +29,7 @@ from open_webui.utils.utils import (
     get_admin_user,
     get_current_user,
     get_password_hash,
+    decode_token_from_alb,
 )
 from open_webui.utils.webhook import post_webhook
 
@@ -120,8 +121,11 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
         if WEBUI_AUTH_TRUSTED_EMAIL_HEADER not in request.headers:
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_TRUSTED_HEADER)
 
-        trusted_email = request.headers[WEBUI_AUTH_TRUSTED_EMAIL_HEADER].lower()
+        jwt = request.headers[WEBUI_AUTH_TRUSTED_EMAIL_HEADER]
+        trusted_email = decode_token_from_alb(jwt)["email"]
+        trusted_email = trusted_email.lower()
         trusted_name = trusted_email
+
         if WEBUI_AUTH_TRUSTED_NAME_HEADER:
             trusted_name = request.headers.get(
                 WEBUI_AUTH_TRUSTED_NAME_HEADER, trusted_email
