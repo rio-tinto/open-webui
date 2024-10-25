@@ -1,0 +1,66 @@
+name: Release to AWS MLPoC ECR
+
+on: 
+  workflow_dispatch:
+    inputs:
+      source_docker_tag:
+        description: 'Source Image Tag'     
+        required: true
+        default: 'latest'
+      destination_docker_tag:
+        description: 'Destination Image Tag'  
+        required: true
+        default: 'latest'
+      account_id:
+        description: 'AWS Account ID'
+      region:
+        description: 'AWS Region'
+      role_to_assume:
+        description: 'AWS Role ARN'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment:
+      name: aws-ecr
+      url: https://aws.amazon.com/ecr/
+    permissions:
+      id-token: write
+    steps:
+      - name: 👨‍💻 Checkout repository
+        uses: actions/checkout@v4
+      - name: 'Login to GitHub Container Registry'
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.DOCKER_CONTAINER_REGISTRY_TOKEN}}
+      - name: 🐳 Pull Image
+        run: |
+          docker pull ghcr.io/rio-tinto/open-webui:${{ github.event.inputs.source_docker_tag }}
+      - name: ☁️ Set AWS Role ARN
+        id: set-role-arn
+        run: |
+          if [[ "${{ github.event.inputs.role_to_assume }}" == "scdev" ]]; then
+            echo "role_arn=${{ vars.AWS_GH_ROLE_ARN }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.inputs.role_to_assume }}" == "scprod" ]]; then
+            echo "role_arn=${{ vars.AWS_GH_ROLE_ARN_PROD }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.inputs.role_to_assume }}" == "mlpoc" ]]; then
+            echo "role_arn=${{ vars.MLPOC_BRUKER_GH_ROLE_ARN }}" >> $GITHUB_OUTPUT
+          else
+            echo "Invalid role specified"
+            exit 1
+          fi
+      - name: ☁️ Authenticate To AWS 
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ steps.set-role-arn.outputs.role_arn }}
+          role-session-name: DNA-Automation-Github-Actions-Session
+          aws-region: ap-southeast-2
+      - name: ☁️ Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: 🐳 Tag and push docker image to Amazon ECR
+        run: |
+          docker tag ghcr.io/rio-tinto/open-webui:${{  github.event.inputs.source_docker_tag }} ${{ github.event.inputs.account_id }}.dkr.ecr.${{ github.event.inputs.region }}.amazonaws.com/open-webui:${{ github.event.inputs.destination_docker_tag }}
+          docker push ${{ github.event.inputs.account_id }}.dkr.ecr.${{ github.event.inputs.region }}.amazonaws.com/open-webui:${{ github.event.inputs.destination_docker_tag }}

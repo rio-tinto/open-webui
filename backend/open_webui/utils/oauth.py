@@ -176,7 +176,7 @@ class OAuthManager:
 
         if not user:
             # If the user does not exist, check if signups are enabled
-            if auth_manager_config.ENABLE_OAUTH_SIGNUP.value:
+            if auth_manager_config.ENABLE_OAUTH_SIGNUP:
                 # Check if an existing user with the same email already exists
                 existing_user = Users.get_user_by_email(
                     user_data.get("email", "").lower()
